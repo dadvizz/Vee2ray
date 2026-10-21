@@ -27,7 +27,7 @@ object LogUtil {
 
     @Suppress("unused")
     fun refreshLogLevel() {
-        cachedMinPriority = parsePriority(MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL, DEFAULT_LEVEL))
+        cachedMinPriority = parsePriority(MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL, "none"))
     }
 
     private fun minPriority(): Int {
@@ -41,7 +41,7 @@ object LogUtil {
             if (current != CACHE_UNSET) {
                 current
             } else {
-                parsePriority(MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL, DEFAULT_LEVEL)).also {
+                parsePriority(MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL, "none")).also {
                     cachedMinPriority = it
                 }
             }

@@ -114,8 +114,8 @@ fun SettingsScreen(
     var advancedSettingsExpanded by rememberSaveable { mutableStateOf(true) }
     var modeSettingsExpanded by rememberSaveable { mutableStateOf(true) }
 
-    var localDns by rememberMmkvBool(AppConfig.PREF_LOCAL_DNS_ENABLED, false)
-    var fakeDns by rememberMmkvBool(AppConfig.PREF_FAKE_DNS_ENABLED, false)
+    var localDns by rememberMmkvBool(AppConfig.PREF_LOCAL_DNS_ENABLED, true)
+    var fakeDns by rememberMmkvBool(AppConfig.PREF_FAKE_DNS_ENABLED, true)
     var appendHttpProxy by rememberMmkvBool(AppConfig.PREF_APPEND_HTTP_PROXY, false)
     var vpnDns by rememberMmkvString(AppConfig.PREF_VPN_DNS, "")
     var vpnBypassLan by rememberMmkvString(AppConfig.PREF_VPN_BYPASS_LAN, AppConfig.DEFAULT_VPN_BYPASS_LAN)
@@ -173,7 +173,7 @@ fun SettingsScreen(
     var remoteDns by rememberMmkvString(AppConfig.PREF_REMOTE_DNS, "")
     var domesticDns by rememberMmkvString(AppConfig.PREF_DOMESTIC_DNS, "")
     var dnsHosts by rememberMmkvString(AppConfig.PREF_DNS_HOSTS, "")
-    var coreLogLevel by rememberMmkvString(AppConfig.PREF_LOGLEVEL, "warning")
+    var coreLogLevel by rememberMmkvString(AppConfig.PREF_LOGLEVEL, "none")
     var outboundResolveMethod by rememberMmkvString(AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD, AppConfig.DEFAULT_OUTBOUND_DOMAIN_RESOLVE_METHOD)
 
     var isBooted by rememberMmkvBool(AppConfig.PREF_IS_BOOTED, false)
