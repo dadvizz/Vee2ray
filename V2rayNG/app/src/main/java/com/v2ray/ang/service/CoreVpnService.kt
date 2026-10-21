@@ -226,7 +226,7 @@ class CoreVpnService : VpnService(), ServiceControl {
         }
 
         // Configure DNS servers
-        //if (MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED) == true) {
+        //if (MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED, true) == true) {
         //  builder.addDnsServer(PRIVATE_VLAN4_ROUTER)
         //} else {
         SettingsManager.getVpnDnsServers().forEach {

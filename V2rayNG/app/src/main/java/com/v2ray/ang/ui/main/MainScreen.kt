@@ -34,6 +34,29 @@ import com.v2ray.ang.ui.compose.QRCodeDialog
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.Card
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
+import java.net.NetworkInterface
+import com.v2ray.ang.AppConfig
+import com.v2ray.ang.handler.MmkvManager
+
 @Composable
 fun MainScreen(
     mainViewModel: MainViewModel,
@@ -47,7 +70,7 @@ fun MainScreen(
     val displayText = mainViewModel.formatStatus(uiState.status)
     val selectedGuid = uiState.selectedGuid
     val doubleColumnDisplay = uiState.doubleColumnDisplay
-    val confirmRemove = uiState.confirmRemove
+    val confirmRemove = false
     val shareQRCodeBitmap = uiState.shareQRCodeBitmap
 
     val isDarkTheme = LocalDarkTheme.current
@@ -202,6 +225,11 @@ fun MainScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
+                    QuickControlBar(
+                        isRunning = isRunning,
+                        onRestartService = { onAction(MainAction.RestartService) }
+                    )
+
                     if (groups.size > 1) {
                         GroupTabBar(
                             groups = groups,
@@ -254,6 +282,95 @@ fun MainScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun QuickControlBar(
+    isRunning: Boolean,
+    onRestartService: () -> Unit
+) {
+    val context = LocalContext.current
+    var proxySharing by remember { mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING, false)) }
+    var fakeDns by remember { mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, true)) }
+
+    val httpPort = MmkvManager.decodeSettingsString(AppConfig.PREF_HTTP_PORT) ?: "10809"
+    val socksPort = MmkvManager.decodeSettingsString(AppConfig.PREF_SOCKS_PORT) ?: "10808"
+
+    val ip by remember { mutableStateOf(
+        try {
+            var result: String? = null
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements() && result == null) {
+                val iface = interfaces.nextElement()
+                if (iface.name.contains("wlan") || iface.name.contains("ap") || iface.name.contains("rndis") || iface.name.contains("swlan")) {
+                    val addresses = iface.inetAddresses
+                    while (addresses.hasMoreElements()) {
+                        val addr = addresses.nextElement()
+                        if (!addr.isLoopbackAddress && (addr.hostAddress?.startsWith("192.168.") == true || addr.hostAddress?.startsWith("10.") == true || addr.hostAddress?.startsWith("172.") == true)) {
+                            result = addr.hostAddress
+                            break
+                        }
+                    }
+                }
+            }
+            result ?: "192.168.x.x"
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "192.168.x.x"
+        }
+    ) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Share Net (Hotspot Proxy)", fontWeight = FontWeight.Bold)
+                Switch(
+                    checked = proxySharing,
+                    onCheckedChange = {
+                        proxySharing = it
+                        MmkvManager.encodeSettings(AppConfig.PREF_PROXY_SHARING, it)
+                        if (isRunning) onRestartService()
+                    }
+                )
+            }
+            if (proxySharing) {
+                Text(
+                    text = "Paylaşım Aktif -> HTTP: $ip:$httpPort | SOCKS: $ip:$socksPort (Kopyala)",
+                    fontSize = 12.sp,
+                    modifier = Modifier.clickable {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("Proxy", "$ip:$httpPort")
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Proxy adresi kopyalandı!", Toast.LENGTH_SHORT).show()
+                    }.padding(top = 4.dp, bottom = 8.dp)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("FakeDNS (Düşük Pil & Hız)", fontWeight = FontWeight.Bold)
+                Switch(
+                    checked = fakeDns,
+                    onCheckedChange = {
+                        fakeDns = it
+                        MmkvManager.encodeSettings(AppConfig.PREF_FAKE_DNS_ENABLED, it)
+                        if (isRunning) onRestartService()
+                    }
+                )
             }
         }
     }
