@@ -456,6 +456,10 @@ object SettingsManager {
      * Ensure default settings are present in MMKV.
      */
     private fun ensureDefaultSettings() {
+        if (!MmkvManager.decodeSettingsBool("has_set_default_confirm_remove", false)) {
+            MmkvManager.encodeSettings(AppConfig.PREF_CONFIRM_REMOVE, false)
+            MmkvManager.encodeSettings("has_set_default_confirm_remove", true)
+        }
         // Write defaults in the exact order requested by the user
         ensureDefaultValue(AppConfig.PREF_MODE, VPN)
         ensureDefaultValue(AppConfig.PREF_VPN_DNS, AppConfig.DNS_VPN)
